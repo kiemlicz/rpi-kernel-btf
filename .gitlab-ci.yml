@@ -3,7 +3,7 @@ stages:
 
 build-kernel:
   stage: build
-  image: ghcr.io/kiemlicz/util/kernel-builder:v0.0.1-kb.1
+  image: ghcr.io/kiemlicz/util/kernel-builder:v0.0.2-kb
   tags:
     - amd64
   variables:
