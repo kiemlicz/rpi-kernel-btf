@@ -5,7 +5,7 @@ build-kernel:
   stage: build
   image: ghcr.io/...
   variables:
-    KUBERNETES_NODE_SELECTOR_HOSTNAME: i5-13600k-debian
+    KUBERNETES_NODE_SELECTOR_HOSTNAME: "kubernetes.io/hostname=i5-13600k-debian"
     KERNEL: kernel8
     ARCH: arm64
     CROSS_COMPILE: aarch64-linux-gnu-
