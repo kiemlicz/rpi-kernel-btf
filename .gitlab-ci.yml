@@ -6,6 +6,7 @@ build-kernel:
   image: ghcr.io/kiemlicz/util/kernel-builder:v0.0.1-kb.1
   variables:
     KUBERNETES_NODE_SELECTOR_HOSTNAME: "kubernetes.io/hostname=i5-13600k-debian"
+    KUBERNETES_NODE_SELECTOR_ARCH: "kubernetes.io/arch=amd64"
     KERNEL: kernel8
     ARCH: arm64
     CROSS_COMPILE: aarch64-linux-gnu-
