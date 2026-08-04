@@ -3,7 +3,7 @@ stages:
 
 build-kernel:
   stage: build
-  image: ghcr.io/kiemlicz/util/kernel-builder:v0.0.1+kb.1
+  image: ghcr.io/kiemlicz/util/kernel-builder:v0.0.1-kb.1
   variables:
     KUBERNETES_NODE_SELECTOR_HOSTNAME: "kubernetes.io/hostname=i5-13600k-debian"
     KERNEL: kernel8
