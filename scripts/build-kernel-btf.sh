@@ -8,7 +8,11 @@ ARCH="${ARCH:-arm64}"
 CROSS_COMPILE="${CROSS_COMPILE:-aarch64-linux-gnu-}"
 KDEB_PKGVERSION="${KDEB_PKGVERSION:-1.0-custom-btf}"
 WORKDIR="${WORKDIR:-$(pwd)/build}"
+mkdir -p "$(dirname "${WORKDIR}")"
+WORKDIR="$(cd "$(dirname "${WORKDIR}")" && pwd)/$(basename "${WORKDIR}")"
 OUTPUT_DIR="${OUTPUT_DIR:-$(pwd)}"
+mkdir -p "${OUTPUT_DIR}"
+OUTPUT_DIR="$(cd "${OUTPUT_DIR}" && pwd)"
 
 export ARCH CROSS_COMPILE
 
@@ -59,7 +63,7 @@ PARENT_DIR="$(cd "$(dirname "${WORKDIR}")" && pwd)"
 mkdir -p "${OUTPUT_DIR}"
 RESOLVED_OUTPUT="$(cd "${OUTPUT_DIR}" && pwd)"
 if [ "${RESOLVED_OUTPUT}" != "${PARENT_DIR}" ]; then
-    cp "${PARENT_DIR}"/*.deb "${OUTPUT_DIR}/"
+    cp "${PARENT_DIR}"/*.deb "${RESOLVED_OUTPUT}/"
 fi
 
 echo "==> Done. Kernel .deb packages with CONFIG_DEBUG_INFO_BTF are in ${OUTPUT_DIR}"
