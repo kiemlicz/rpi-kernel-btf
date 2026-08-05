@@ -11,19 +11,10 @@ build-kernel:
     KERNEL: kernel8
     ARCH: arm64
     CROSS_COMPILE: aarch64-linux-gnu-
-  before_script:
-    - git clone --depth=1 https://github.com/raspberrypi/linux.git
-    - cd linux
+    KERNEL_BRANCH: rpi-6.18.y
+    DEFCONFIG: bcm2712_defconfig
   script:
-    # Use bcm2711_defconfig for Pi 4, or bcm2712_defconfig for Pi 5
-    - make bcm2711_defconfig
-    # Enable BTF debug info
-    - ./scripts/config --enable CONFIG_DEBUG_INFO_BTF
-    # Ensure BPF syscalls are enabled (usually default on RPi, but good to be safe)
-    - ./scripts/config --enable CONFIG_BPF_SYSCALL
-    # Apply the changes and automatically answer 'yes' to any new dependency prompts
-    - make olddefconfig
-    - make -j$(nproc) bindeb-pkg KDEB_PKGVERSION=1.0-custom-btf
+    - ./scripts/build-kernel-btf.sh
   artifacts:
     paths:
       - "*.deb"
