@@ -18,5 +18,3 @@ build-kernel:
   artifacts:
     paths:
       - "*.deb"
-    exclude:
-      - "*-dbg_*.deb"
