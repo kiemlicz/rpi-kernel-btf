@@ -15,6 +15,11 @@ mkdir -p "${OUTPUT_DIR}"
 OUTPUT_DIR="$(cd "${OUTPUT_DIR}" && pwd)"
 
 export ARCH CROSS_COMPILE
+# scripts/setlocalversion appends "+" whenever LOCALVERSION is merely
+# *unset* and the tree isn't at a clean signed tag -- true for any
+# --depth=1 clone regardless of CONFIG_LOCALVERSION_AUTO. Setting it
+# (even empty) short-circuits that check.
+export LOCALVERSION=
 
 echo "==> Cloning ${KERNEL_REPO} (branch ${KERNEL_BRANCH}) into ${WORKDIR}"
 rm -rf "${WORKDIR}"
