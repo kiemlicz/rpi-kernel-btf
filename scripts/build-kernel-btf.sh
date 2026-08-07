@@ -34,6 +34,12 @@ echo "==> Enabling CONFIG_DEBUG_INFO_BTF and its prerequisites"
 ./scripts/config --enable  CONFIG_DEBUG_INFO_DWARF5
 ./scripts/config --enable  CONFIG_DEBUG_INFO_BTF
 ./scripts/config --enable  CONFIG_BPF_SYSCALL
+
+# raspi-firmware's postinst hook derives the boot image slot via
+# ${kernel_version#*-rpi-}; without a "-rpi-2712" suffix it can't tell
+# kernel8.img from kernel_2712.img and silently skips installation.
+./scripts/config --set-str CONFIG_LOCALVERSION "+rpt-rpi-2712"
+
 make olddefconfig
 
 echo "==> Verifying CONFIG_DEBUG_INFO_BTF survived olddefconfig"
