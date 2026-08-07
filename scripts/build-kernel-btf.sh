@@ -60,6 +60,26 @@ fi
 echo "==> Building bindeb-pkg (this will take a while)"
 make -j"$(nproc)" bindeb-pkg KDEB_PKGVERSION="${KDEB_PKGVERSION}"
 
+echo "==> Patching missing overlays/README into linux-image .deb"
+# arch/arm/boot/dts/overlays/README exists in-tree but isn't part of the
+# dtbs_install file list, so vanilla bindeb-pkg drops it. raspi-firmware's
+# postinst hook rsyncs it as a required (non-glob) source and hard-fails
+# with exit 23 if it's missing, so it has to be injected after packaging.
+KERNEL_RELEASE="$(cat include/config/kernel.release)"
+PARENT_DIR="$(cd "$(dirname "${WORKDIR}")" && pwd)"
+IMAGE_DEB="${PARENT_DIR}/linux-image-${KERNEL_RELEASE}_${KDEB_PKGVERSION}_arm64.deb"
+if [ -f "${IMAGE_DEB}" ] && [ -f "arch/arm/boot/dts/overlays/README" ]; then
+    PATCH_DIR="$(mktemp -d)"
+    dpkg-deb -R "${IMAGE_DEB}" "${PATCH_DIR}"
+    mkdir -p "${PATCH_DIR}/usr/lib/linux-image-${KERNEL_RELEASE}/overlays"
+    cp arch/arm/boot/dts/overlays/README "${PATCH_DIR}/usr/lib/linux-image-${KERNEL_RELEASE}/overlays/README"
+    ( cd "${PATCH_DIR}" && find . -type f ! -path './DEBIAN/*' -printf '%P\0' | xargs -0 md5sum > DEBIAN/md5sums )
+    dpkg-deb -b "${PATCH_DIR}" "${IMAGE_DEB}"
+    rm -rf "${PATCH_DIR}"
+else
+    echo "WARNING: expected ${IMAGE_DEB} or source README not found, skipping README patch" >&2
+fi
+
 echo "==> Verifying built vmlinux contains a BTF section"
 VMLINUX="${WORKDIR}/vmlinux"
 if [ ! -f "${VMLINUX}" ]; then
@@ -73,7 +93,6 @@ fi
 echo "==> BTF section confirmed present in vmlinux"
 
 echo "==> Collecting *.deb packages into ${OUTPUT_DIR}"
-PARENT_DIR="$(cd "$(dirname "${WORKDIR}")" && pwd)"
 mkdir -p "${OUTPUT_DIR}"
 RESOLVED_OUTPUT="$(cd "${OUTPUT_DIR}" && pwd)"
 if [ "${RESOLVED_OUTPUT}" != "${PARENT_DIR}" ]; then
