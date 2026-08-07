@@ -36,8 +36,11 @@ echo "==> Enabling CONFIG_DEBUG_INFO_BTF and its prerequisites"
 ./scripts/config --enable  CONFIG_BPF_SYSCALL
 
 # raspi-firmware's postinst hook derives the boot image slot via
-# ${kernel_version#*-rpi-}; without a "-rpi-2712" suffix it can't tell
-# kernel8.img from kernel_2712.img and silently skips installation.
+# ${kernel_version#*-rpi-} and matches it with an exact `case` pattern
+# (e.g. "2712"), so no extra suffix can survive. CONFIG_LOCALVERSION_AUTO
+# appends a "+" when git describe can't find a clean tag -- guaranteed
+# with our --depth=1 clone -- so it must be disabled here.
+./scripts/config --disable CONFIG_LOCALVERSION_AUTO
 ./scripts/config --set-str CONFIG_LOCALVERSION "+rpt-rpi-2712"
 
 make olddefconfig
