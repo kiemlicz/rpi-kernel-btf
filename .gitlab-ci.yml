@@ -16,6 +16,12 @@ build-kernel:
   script:
     - ./scripts/build-kernel-btf.sh
     - |
+      shopt -s nullglob
       for d in *.deb; do
-        curl --request PUT --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "$d" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/debian/$d?distribution=trixie&component=main&architecture=arm64"
+        echo "Uploading: $d"
+        curl --fail --request PUT \
+          --user "gitlab-ci-token:${CI_JOB_TOKEN}" \
+          --upload-file "$d" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/debian/$d?distribution=trixie&component=main&architecture=arm64"
       done
+# Job-Token?
