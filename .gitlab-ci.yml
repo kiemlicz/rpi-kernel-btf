@@ -15,6 +15,7 @@ build-kernel:
     DEFCONFIG: bcm2712_defconfig
   script:
     - ./scripts/build-kernel-btf.sh
-  artifacts:
-    paths:
-      - "*.deb"
+    - |
+      for d in *.deb; do
+        curl --request PUT --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "$d" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/debian/$d?distribution=trixie&component=main&architecture=arm64"
+      done
