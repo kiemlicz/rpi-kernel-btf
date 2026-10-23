@@ -1,3 +1,4 @@
-[Enable Debian repo on gitlab](https://docs.gitlab.com/user/packages/debian_repository/)
+Modified kernel for RPI5 model that allows it to run Cilium requiring BTF.    
+Built kernel is hosted on Gitlab's Debian repo.
 
-API spec: https://docs.gitlab.com/api/packages/debian_project_distributions/
+[Linked issue](https://github.com/cilium/cilium/issues/47718)

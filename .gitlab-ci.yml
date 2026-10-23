@@ -25,3 +25,6 @@ build-kernel:
           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/debian/$d?distribution=trixie&component=main&architecture=arm64"
       done
 # Job-Token?
+# Hosting on Gitlab
+# [Enable Debian repo on gitlab](https://docs.gitlab.com/user/packages/debian_repository/)
+# API spec: https://docs.gitlab.com/api/packages/debian_project_distributions/
