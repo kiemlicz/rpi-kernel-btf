@@ -10,6 +10,9 @@ stages:
         --user "gitlab-ci-token:${CI_JOB_TOKEN}" \
         --upload-file "$d" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/debian/$d?distribution=trixie&component=main&architecture=arm64"
+      # GitLab regenerates the distribution index asynchronously per upload; uploads landing while
+      # it runs are left out of the index, so give each regeneration time to finish
+      sleep 15
     done
 
 build-kernel:
