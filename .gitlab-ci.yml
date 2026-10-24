@@ -1,11 +1,27 @@
 stages:
   - build
 
+.upload-debs: &upload-debs
+  - |
+    shopt -s nullglob
+    for d in *.deb; do
+      echo "Uploading: $d"
+      curl --fail --request PUT \
+        --user "gitlab-ci-token:${CI_JOB_TOKEN}" \
+        --upload-file "$d" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/debian/$d?distribution=trixie&component=main&architecture=arm64"
+    done
+
 build-kernel:
   stage: build
   image: ghcr.io/kiemlicz/util/kernel-builder:v0.0.2-kb
   tags:
     - amd64
+  rules:
+    # metapackage-only pipelines must not rebuild the kernel from the moving KERNEL_BRANCH tip
+    - if: $META_KERNEL_RELEASE
+      when: never
+    - when: on_success
   variables:
     KUBERNETES_NODE_SELECTOR_HOSTNAME: "kubernetes.io/hostname=i5-13600k-debian"
     KERNEL: kernel8
@@ -15,15 +31,22 @@ build-kernel:
     DEFCONFIG: bcm2712_defconfig
   script:
     - ./scripts/build-kernel-btf.sh
-    - |
-      shopt -s nullglob
-      for d in *.deb; do
-        echo "Uploading: $d"
-        curl --fail --request PUT \
-          --user "gitlab-ci-token:${CI_JOB_TOKEN}" \
-          --upload-file "$d" \
-          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/debian/$d?distribution=trixie&component=main&architecture=arm64"
-      done
+    - *upload-debs
+
+# Publishes only the metapackages for an already published kernel, e.g.:
+#   git push -o ci.variable="META_KERNEL_RELEASE=6.18.42+rpt-rpi-2712"
+build-meta:
+  stage: build
+  image: ghcr.io/kiemlicz/util/kernel-builder:v0.0.2-kb
+  tags:
+    - amd64
+  rules:
+    - if: $META_KERNEL_RELEASE
+  variables:
+    ARCH: arm64
+  script:
+    - KERNEL_RELEASE="${META_KERNEL_RELEASE}" ./scripts/build-meta.sh
+    - *upload-debs
 # Job-Token?
 # Hosting on Gitlab
 # [Enable Debian repo on gitlab](https://docs.gitlab.com/user/packages/debian_repository/)

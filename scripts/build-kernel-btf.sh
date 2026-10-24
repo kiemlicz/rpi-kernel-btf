@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# resolved before the script cd's into the kernel tree
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 KERNEL_REPO="${KERNEL_REPO:-https://github.com/raspberrypi/linux.git}"
 KERNEL_BRANCH="${KERNEL_BRANCH:-rpi-6.18.y}"
 DEFCONFIG="${DEFCONFIG:-bcm2712_defconfig}"
@@ -92,43 +94,8 @@ if ! readelf -S "${VMLINUX}" | grep -q '\.BTF '; then
 fi
 echo "==> BTF section confirmed present in vmlinux"
 
-echo "==> Building linux-image/linux-headers metapackages for ${KERNEL_RELEASE}"
-# archive.raspberrypi.com ships linux-image-rpi-<flavour> and linux-headers-rpi-<flavour>
-# metapackages that track the stock kernel. Publishing same-named metapackages here lets hosts pin
-# them to this repo, so `apt upgrade` follows custom builds instead of pulling the stock kernel.
-# The epoch (stock uses 1:) keeps these ahead of the stock ones even where the pin is missing.
-KERNEL_VERSION="$(make -s kernelversion)"
-FLAVOUR="${KERNEL_RELEASE#*-rpi-}"
-META_VERSION="${META_VERSION:-2:${KERNEL_VERSION}+${KDEB_PKGVERSION}}"
-build_meta() {
-    local name="$1" depends="$2" provides="$3"
-    local meta_dir
-    meta_dir="$(mktemp -d)"
-    # mktemp creates 0700; the package root must not ship that mode for "/"
-    chmod 0755 "${meta_dir}"
-    mkdir -p "${meta_dir}/DEBIAN"
-    cat > "${meta_dir}/DEBIAN/control" <<EOF
-Package: ${name}
-Version: ${META_VERSION}
-Architecture: ${ARCH}
-Maintainer: l3a <noreply@l3a.dev>
-Section: kernel
-Priority: optional
-Depends: ${depends}
-${provides:+Provides: ${provides}
-}Description: Linux with BTF for Raspberry Pi ${FLAVOUR} (meta-package)
- Depends on the latest custom BTF-enabled kernel build (${KERNEL_RELEASE}).
-EOF
-    # dpkg-deb names files without the epoch, matching how bindeb-pkg names its .debs
-    dpkg-deb --root-owner-group -b "${meta_dir}" "${PARENT_DIR}/${name}_${META_VERSION#*:}_${ARCH}.deb"
-    rm -rf "${meta_dir}"
-}
-build_meta "linux-image-rpi-${FLAVOUR}" \
-    "linux-image-${KERNEL_RELEASE} (= ${KDEB_PKGVERSION})" \
-    "linux-latest-modules-${KERNEL_RELEASE}, wireguard-modules (= 1.0.0)"
-build_meta "linux-headers-rpi-${FLAVOUR}" \
-    "linux-headers-${KERNEL_RELEASE} (= ${KDEB_PKGVERSION})" \
-    ""
+KERNEL_RELEASE="${KERNEL_RELEASE}" KDEB_PKGVERSION="${KDEB_PKGVERSION}" OUTPUT_DIR="${PARENT_DIR}" \
+    "${SCRIPT_DIR}/build-meta.sh"
 
 echo "==> Collecting *.deb packages into ${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
